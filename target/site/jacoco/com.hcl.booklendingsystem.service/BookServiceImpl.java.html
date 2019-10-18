@@ -1,0 +1,196 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>BookServiceImpl.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">book-lending-system</a> &gt; <a href="index.source.html" class="el_package">com.hcl.booklendingsystem.service</a> &gt; <span class="el_source">BookServiceImpl.java</span></div><h1>BookServiceImpl.java</h1><pre class="source lang-java linenums">package com.hcl.booklendingsystem.service;
+
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+
+import javax.transaction.Transactional;
+
+import org.springframework.beans.BeanUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.stereotype.Service;
+
+import com.hcl.booklendingsystem.dto.BookRequestDetails;
+import com.hcl.booklendingsystem.dto.CommonResponse;
+import com.hcl.booklendingsystem.dto.GetBooksOutput;
+import com.hcl.booklendingsystem.entity.Author;
+import com.hcl.booklendingsystem.entity.Book;
+import com.hcl.booklendingsystem.entity.BookHistory;
+import com.hcl.booklendingsystem.entity.BookRequest;
+import com.hcl.booklendingsystem.entity.User;
+import com.hcl.booklendingsystem.exception.BookNotFoundException;
+import com.hcl.booklendingsystem.exception.UserNotFoundException;
+import com.hcl.booklendingsystem.repository.AuthorRepository;
+import com.hcl.booklendingsystem.repository.BookHistoryRepository;
+import com.hcl.booklendingsystem.repository.BookRepository;
+import com.hcl.booklendingsystem.repository.BookRequestRepository;
+import com.hcl.booklendingsystem.repository.UserRepository;
+import com.hcl.booklendingsystem.util.BookLendingSystemConstants;
+
+import lombok.extern.slf4j.Slf4j;
+
+/**
+ * 
+ * This class contains the method for add a book for registered user &amp; borrow a
+ * book if the book is available.
+ * 
+ * @author KiruhtikaK
+ * @author sairam
+ * @author sheshma
+ * @since 2109/16/10
+ *
+ */
+<span class="fc" id="L47">@Slf4j</span>
+@Service
+<span class="fc" id="L49">public class BookServiceImpl implements BookService {</span>
+
+	@Autowired
+	BookRepository bookRepository;
+	@Autowired
+	AuthorRepository authorRepository;
+	@Autowired
+	UserRepository userRepository;
+	@Autowired
+	BookRequestRepository bookRequestRepository;
+
+	@Autowired
+	BookHistoryRepository bookHistoryRepository;
+
+	/**
+	 * 
+	 * This method for add a book for already registered user and based on author
+	 * also.
+	 * 
+	 * @param bookRequestDetails
+	 * @return CommonResponse
+	 * 
+	 */
+	@Transactional
+	public CommonResponse addBook(BookRequestDetails bookRequestDetails) {
+<span class="fc" id="L74">		log.info(BookLendingSystemConstants.BOOK_SERVICE);</span>
+
+<span class="fc" id="L76">		log.info(BookLendingSystemConstants.BOOK_SERVICE_START);</span>
+<span class="fc" id="L77">		Optional&lt;User&gt; user = userRepository.findById(bookRequestDetails.getUserId());</span>
+<span class="fc bfc" id="L78" title="All 2 branches covered.">		if (!user.isPresent()) {</span>
+<span class="fc" id="L79">			throw new UserNotFoundException(BookLendingSystemConstants.USER_NOT_EXISTS);</span>
+		}
+<span class="fc" id="L81">		Optional&lt;Author&gt; authorr = authorRepository.findByAuthorName(bookRequestDetails.getAuthorName());</span>
+<span class="fc" id="L82">		Book book = new Book();</span>
+<span class="fc bfc" id="L83" title="All 2 branches covered.">		if (!authorr.isPresent()) {</span>
+<span class="fc" id="L84">			Author author = new Author();</span>
+<span class="fc" id="L85">			author.setAuthorName(bookRequestDetails.getAuthorName());</span>
+<span class="fc" id="L86">			authorRepository.save(author);</span>
+<span class="fc" id="L87">			book.setAuthorId(author.getAuthorId());</span>
+
+<span class="fc" id="L89">		} else {</span>
+
+<span class="fc" id="L91">			book.setAuthorId(authorr.get().getAuthorId());</span>
+		}
+
+<span class="fc" id="L94">		BeanUtils.copyProperties(bookRequestDetails, book);</span>
+<span class="fc" id="L95">		book.setBookStatus(BookLendingSystemConstants.AVAILABLE);</span>
+<span class="fc" id="L96">		bookRepository.save(book);</span>
+
+<span class="fc" id="L98">		CommonResponse commonResponse = new CommonResponse();</span>
+<span class="fc" id="L99">		log.info(BookLendingSystemConstants.BOOK_SERVICE_END);</span>
+<span class="fc" id="L100">		return commonResponse;</span>
+	}
+
+	/**
+	 * This method for borrow a book for the registered user if the book is
+	 * available &amp; maintain the book history
+	 * 
+	 * @param bookId
+	 * @param userId
+	 * @return CommonResponse
+	 */
+	@Transactional
+	public CommonResponse borrowBook(Integer bookId, Integer userId) {
+
+<span class="fc" id="L114">		log.info(BookLendingSystemConstants.BOOK_SERVICE_START);</span>
+<span class="fc" id="L115">		Optional&lt;Book&gt; book = bookRepository.findById(bookId);</span>
+
+<span class="fc bfc" id="L117" title="All 2 branches covered.">		if (!book.isPresent()) {</span>
+<span class="fc" id="L118">			throw new BookNotFoundException(BookLendingSystemConstants.BOOK_NOT_FOUND);</span>
+		}
+<span class="fc" id="L120">		book.get().setBookStatus(BookLendingSystemConstants.BORROW);</span>
+<span class="fc" id="L121">		bookRepository.save(book.get());</span>
+
+<span class="fc" id="L123">		BookHistory bookHistory = new BookHistory();</span>
+<span class="fc" id="L124">		bookHistory.setBookId(bookId);</span>
+<span class="fc" id="L125">		bookHistory.setUserId(userId);</span>
+<span class="fc" id="L126">		LocalDateTime borrowDate = LocalDateTime.now();</span>
+<span class="fc" id="L127">		bookHistory.setBorrowDate(borrowDate);</span>
+<span class="fc" id="L128">		bookHistoryRepository.save(bookHistory);</span>
+
+<span class="fc" id="L130">		CommonResponse commonResponse = new CommonResponse();</span>
+<span class="fc" id="L131">		log.info(BookLendingSystemConstants.BOOK_SERVICE_END);</span>
+<span class="fc" id="L132">		return commonResponse;</span>
+	}
+
+	/**
+	 * This method will accept bookId and userId and throw BookNotFound exception if
+	 * the book is not exist and throw UserNotfound exception if user is not
+	 * present,else save bookRequest object in respective table by calling save
+	 * method in userRepository.
+	 * 
+	 * @param bookId
+	 * @param userId
+	 * @return Optional&lt;BookRequest&gt;
+	 */
+	@Override
+	public Optional&lt;BookRequest&gt; requestBook(Integer bookId, Integer userId) {
+<span class="fc" id="L147">		Optional&lt;Book&gt; bookOptional = bookRepository.findById(bookId);</span>
+<span class="fc bfc" id="L148" title="All 2 branches covered.">		if (!bookOptional.isPresent())</span>
+<span class="fc" id="L149">			throw new BookNotFoundException(BookLendingSystemConstants.BOOK_NOT_FOUND_EXCEPTION);</span>
+<span class="fc" id="L150">		Optional&lt;User&gt; userOptional = userRepository.findById(userId);</span>
+<span class="fc bfc" id="L151" title="All 2 branches covered.">		if (!userOptional.isPresent())</span>
+<span class="fc" id="L152">			throw new UserNotFoundException(BookLendingSystemConstants.USER_NOT_FOUND);</span>
+<span class="fc" id="L153">		BookRequest bookRequest = new BookRequest();</span>
+<span class="fc" id="L154">		bookRequest.setBookId(bookId);</span>
+<span class="fc" id="L155">		bookRequest.setUserId(userId);</span>
+<span class="fc" id="L156">		bookRequest.setBookRequestDate(LocalDateTime.now());</span>
+<span class="fc" id="L157">		bookRequest = bookRequestRepository.save(bookRequest);</span>
+<span class="fc" id="L158">		return Optional.of(bookRequest);</span>
+	}
+
+	/**
+	 * This method will accept bookName,authorName and pageNumber and filter the
+	 * books based on values then send filtered result back.
+	 * 
+	 * @param bookName
+	 * @param authorName
+	 * @param pageNumber
+	 * @return ResponseEntity of BookListResponse
+	 */
+	@Override
+	public Optional&lt;List&lt;GetBooksOutput&gt;&gt; getBooks(String bookName, String authorName, Integer pageNumber) {
+<span class="fc" id="L172">		Pageable pageable = PageRequest.of(pageNumber, BookLendingSystemConstants.PAGENATION_SIZE);</span>
+<span class="fc" id="L173">		List&lt;GetBooksOutput&gt; getBooksOutputs = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L174">		List&lt;Book&gt; bookList = new ArrayList&lt;&gt;();</span>
+<span class="fc bfc" id="L175" title="All 4 branches covered.">		if (bookName == null &amp;&amp; authorName == null) {</span>
+<span class="fc" id="L176">			Page&lt;Book&gt; books = bookRepository.findAll(pageable);</span>
+<span class="pc bpc" id="L177" title="1 of 2 branches missed.">			if (books.hasContent()) {</span>
+<span class="fc" id="L178">				bookList = books.getContent();</span>
+			}
+<span class="pc bpc" id="L180" title="1 of 4 branches missed.">		} else if (bookName != null &amp;&amp; authorName != null) {</span>
+<span class="fc" id="L181">			bookList = bookRepository.searchBookByAuthorNameAndBookName(bookName, authorName, pageable);</span>
+		} else {
+<span class="fc" id="L183">			bookList = bookRepository.searchBookByAuthorNameOrBookName(bookName, authorName, pageable);</span>
+		}
+<span class="fc" id="L185">		bookList.forEach(book -&gt; {</span>
+<span class="fc" id="L186">			GetBooksOutput getBooksOutput = new GetBooksOutput();</span>
+<span class="fc" id="L187">			Optional&lt;Author&gt; authorOptonal = authorRepository.findById(book.getAuthorId());</span>
+<span class="pc" id="L188">			authorOptonal.ifPresent(author -&gt; getBooksOutput.setAuthorName(author.getAuthorName()));</span>
+<span class="fc" id="L189">			BeanUtils.copyProperties(book, getBooksOutput);</span>
+<span class="fc" id="L190">			getBooksOutputs.add(getBooksOutput);</span>
+<span class="fc" id="L191">		});</span>
+<span class="fc" id="L192">		return Optional.of(getBooksOutputs);</span>
+	}
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.0.201801022044</span></div></body></html>

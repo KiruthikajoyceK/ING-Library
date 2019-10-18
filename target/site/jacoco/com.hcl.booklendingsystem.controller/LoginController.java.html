@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>LoginController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">book-lending-system</a> &gt; <a href="index.source.html" class="el_package">com.hcl.booklendingsystem.controller</a> &gt; <span class="el_source">LoginController.java</span></div><h1>LoginController.java</h1><pre class="source lang-java linenums">package com.hcl.booklendingsystem.controller;
+
+import java.util.Optional;
+
+import javax.validation.Valid;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.validation.BindingResult;
+import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RestController;
+import com.hcl.booklendingsystem.dto.LoginRequest;
+import com.hcl.booklendingsystem.dto.LoginResponse;
+import com.hcl.booklendingsystem.entity.User;
+import com.hcl.booklendingsystem.exception.UserException;
+import com.hcl.booklendingsystem.exception.UserNotFoundException;
+import com.hcl.booklendingsystem.service.LoginService;
+import com.hcl.booklendingsystem.util.BookLendingSystemConstants;
+
+import lombok.extern.slf4j.Slf4j;
+<span class="fc" id="L23">@Slf4j</span>
+@RestController
+@CrossOrigin(allowedHeaders = {&quot;*&quot;,&quot;*/&quot;}, origins = {&quot;*&quot;,&quot;*/&quot;})
+<span class="fc" id="L26">public class LoginController {</span>
+	
+	@Autowired
+	LoginService loginService;
+	/**
+	 * @param loginRequest 
+	 * @param bindingResult
+	 * @return ResponseEntity of LoginResponse 
+	 */
+    @PostMapping(value = &quot;/login&quot;)
+    public ResponseEntity&lt;LoginResponse&gt; login(@Valid @RequestBody LoginRequest loginRequest, BindingResult bindingResult) {
+<span class="fc" id="L37">    	log.debug(BookLendingSystemConstants.LOGIN_DEBUG_END_CONTROLLER);</span>
+<span class="fc" id="L38">    	log.info(&quot;inside login email:{} password:{}&quot;,loginRequest.getEmail(),loginRequest.getPassword());</span>
+<span class="fc" id="L39">    	 LoginResponse loginResponse=new LoginResponse();</span>
+<span class="fc bfc" id="L40" title="All 2 branches covered.">        if (bindingResult.hasErrors()) {</span>
+<span class="fc" id="L41">        	throw new UserException(bindingResult.getFieldError().getField()+&quot; &quot;+bindingResult.getFieldError().getDefaultMessage());</span>
+        }
+<span class="fc" id="L43">        Optional&lt;User&gt; optionalUser=loginService.getUerByUsernameAndPassword(loginRequest);</span>
+<span class="fc bfc" id="L44" title="All 2 branches covered.">        if(optionalUser.isPresent()) {</span>
+<span class="fc" id="L45">        	loginResponse.setStatusCode(HttpStatus.OK.value());</span>
+<span class="fc" id="L46">        	loginResponse.setMessage(BookLendingSystemConstants.SUCCESS);</span>
+<span class="fc" id="L47">        	loginResponse.setUserId(optionalUser.get().getUserId());</span>
+        }else {
+<span class="fc" id="L49">        	throw new UserNotFoundException(BookLendingSystemConstants.USER_NOT_FOUND);</span>
+        }
+<span class="fc" id="L51">        log.debug(BookLendingSystemConstants.LOGIN_DEBUG_START_CONTROLLER);</span>
+<span class="fc" id="L52">        return new ResponseEntity&lt;&gt;(loginResponse,HttpStatus.CREATED);</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.0.201801022044</span></div></body></html>

@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>LoginServiceImpl.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">book-lending-system</a> &gt; <a href="index.source.html" class="el_package">com.hcl.booklendingsystem.service</a> &gt; <span class="el_source">LoginServiceImpl.java</span></div><h1>LoginServiceImpl.java</h1><pre class="source lang-java linenums">package com.hcl.booklendingsystem.service;
+
+import java.util.Optional;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import com.hcl.booklendingsystem.dto.LoginRequest;
+import com.hcl.booklendingsystem.entity.User;
+import com.hcl.booklendingsystem.repository.UserRepository;
+import com.hcl.booklendingsystem.util.BookLendingSystemConstants;
+
+import lombok.extern.slf4j.Slf4j;
+
+<span class="fc" id="L13">@Slf4j</span>
+@Service
+<span class="fc" id="L15">public class LoginServiceImpl implements LoginService {</span>
+
+	@Autowired
+	UserRepository userRepository;
+
+	/**
+	 * @param loginRequest
+	 * @return optional of User This method will accept loginRequest as input and
+	 *         get user object for given user name and password.Then return optional
+	 *         of user.
+	 */
+	@Override
+	public Optional&lt;User&gt; getUerByUsernameAndPassword(LoginRequest loginRequest) {
+<span class="fc" id="L28">		log.debug(BookLendingSystemConstants.LOGIN_DEBUG_START_SERVICE);</span>
+<span class="fc" id="L29">		Optional&lt;User&gt; optionalUser = userRepository.findByEmailAndPassword(loginRequest.getEmail(),</span>
+<span class="fc" id="L30">				loginRequest.getPassword());</span>
+<span class="fc" id="L31">		log.debug(BookLendingSystemConstants.LOGIN_DEBUG_END_SERVICE);</span>
+<span class="fc" id="L32">		return optionalUser;</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.0.201801022044</span></div></body></html>

@@ -1,0 +1,6 @@
+projectKey=com.hcl:book-lending-system
+serverUrl=http://localhost:9000
+serverVersion=6.6.0.32724
+dashboardUrl=http://localhost:9000/dashboard/index/com.hcl:book-lending-system
+ceTaskId=AW3dbCErBS-Gao4RGYg9
+ceTaskUrl=http://localhost:9000/api/ce/task?id=AW3dbCErBS-Gao4RGYg9

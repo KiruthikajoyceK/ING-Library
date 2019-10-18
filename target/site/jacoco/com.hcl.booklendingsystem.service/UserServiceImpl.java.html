@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>UserServiceImpl.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">book-lending-system</a> &gt; <a href="index.source.html" class="el_package">com.hcl.booklendingsystem.service</a> &gt; <span class="el_source">UserServiceImpl.java</span></div><h1>UserServiceImpl.java</h1><pre class="source lang-java linenums">package com.hcl.booklendingsystem.service;
+
+import java.util.Optional;
+import org.springframework.beans.BeanUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import com.hcl.booklendingsystem.dto.UserRequest;
+import com.hcl.booklendingsystem.entity.User;
+import com.hcl.booklendingsystem.repository.UserRepository;
+import com.hcl.booklendingsystem.util.BookLendingSystemConstants;
+
+import lombok.extern.slf4j.Slf4j;
+
+/**
+ * @since 2019-10-16 This class includes method for register user
+ * @author Sreeshma S Menon
+ */
+<span class="fc" id="L18">@Slf4j</span>
+@Service
+<span class="fc" id="L20">public class UserServiceImpl implements UserService {</span>
+
+	@Autowired
+	UserRepository userRepository;
+
+	/**
+	 * @param userRequest
+	 * @return Optional&lt;User&gt; This method will accept userRequest as input,copy the
+	 *         properties from userRequest to user object and call the save method
+	 *         in repository and return back optional of User object.
+	 */
+	@Override
+	public Optional&lt;User&gt; save(UserRequest userRequest) {
+<span class="fc" id="L33">		log.info(BookLendingSystemConstants.SAVE_USER_DEBUG_START_SERVICE);</span>
+<span class="fc" id="L34">		User user = new User();</span>
+<span class="fc" id="L35">		BeanUtils.copyProperties(userRequest, user);</span>
+<span class="fc" id="L36">		user.setPassword(userRequest.getPassword());</span>
+<span class="fc" id="L37">		user = userRepository.save(user);</span>
+<span class="fc" id="L38">		log.info(BookLendingSystemConstants.SAVE_USER_DEBUG_END_SERVICE);</span>
+<span class="fc" id="L39">		return Optional.of(user);</span>
+	}
+
+
+
+	/**
+	 * @param email
+	 * @return Optional of User
+	 * This method will accept email and return respective user object.
+	 */
+	@Override
+	public Optional&lt;User&gt; getUserByEmail(String email) {
+<span class="fc" id="L51">		log.debug(BookLendingSystemConstants.GET_USER_BY_EMAIL_DEBUG_START_SERVICE);</span>
+<span class="fc" id="L52">         Optional&lt;User&gt; userOptional= userRepository.findByEmail(email);</span>
+<span class="fc" id="L53">		log.debug(BookLendingSystemConstants.GET_USER_BY_EMAIL_DEBUG_END_SERVICE);</span>
+<span class="fc" id="L54">		return userOptional;</span>
+	}
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.0.201801022044</span></div></body></html>

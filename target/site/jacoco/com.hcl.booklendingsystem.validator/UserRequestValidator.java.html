@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>UserRequestValidator.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">book-lending-system</a> &gt; <a href="index.source.html" class="el_package">com.hcl.booklendingsystem.validator</a> &gt; <span class="el_source">UserRequestValidator.java</span></div><h1>UserRequestValidator.java</h1><pre class="source lang-java linenums">package com.hcl.booklendingsystem.validator;
+
+import java.util.Optional;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
+import org.springframework.validation.Errors;
+import org.springframework.validation.Validator;
+
+import com.hcl.booklendingsystem.dto.UserRequest;
+import com.hcl.booklendingsystem.entity.User;
+import com.hcl.booklendingsystem.exception.EmailExistException;
+import com.hcl.booklendingsystem.exception.UserException;
+import com.hcl.booklendingsystem.service.UserService;
+import com.hcl.booklendingsystem.util.BookLendingSystemConstants;
+
+import lombok.extern.slf4j.Slf4j;
+
+/**
+ * @since 2019-10-14 This class will validate the userRequest properties.
+ * @author Sreeshma S Menon
+ */
+<span class="fc" id="L23">@Slf4j</span>
+@Component
+<span class="fc" id="L25">public class UserRequestValidator implements Validator {</span>
+
+	@Autowired
+	UserService userService;
+
+	@Override
+	public boolean supports(Class&lt;?&gt; clazz) {
+<span class="nc" id="L32">		return clazz.equals(UserRequest.class);</span>
+	}
+
+	@Override
+	public void validate(Object target, Errors errors) {
+<span class="nc" id="L37">		log.debug(BookLendingSystemConstants.VALIDATING);</span>
+<span class="nc" id="L38">		UserRequest bean = (UserRequest) target;</span>
+<span class="nc" id="L39">		validateEmail(bean);</span>
+<span class="nc" id="L40">		validatePhoneNumber(bean.getPhone());</span>
+
+<span class="nc" id="L42">	}</span>
+
+	private void validateEmail(UserRequest bean) {
+<span class="nc" id="L45">		Optional&lt;User&gt; user = userService.getUserByEmail(bean.getEmail());</span>
+<span class="nc bnc" id="L46" title="All 2 branches missed.">		if (user.isPresent()) {</span>
+<span class="nc" id="L47">			throw new EmailExistException(BookLendingSystemConstants.EMAIL_EXIST_EXCEPTION);</span>
+		}
+<span class="nc" id="L49">	}</span>
+
+	private void validatePhoneNumber(Long phoneNumber) {
+<span class="nc bnc" id="L52" title="All 4 branches missed.">		if (phoneNumber == null || phoneNumber.toString().length() != 10) {</span>
+<span class="nc" id="L53">			throw new UserException(BookLendingSystemConstants.INVALID_PHONE_NO);</span>
+		}
+<span class="nc" id="L55">	}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.0.201801022044</span></div></body></html>

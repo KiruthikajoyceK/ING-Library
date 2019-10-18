@@ -1,0 +1,157 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>BookController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">book-lending-system</a> &gt; <a href="index.source.html" class="el_package">com.hcl.booklendingsystem.controller</a> &gt; <span class="el_source">BookController.java</span></div><h1>BookController.java</h1><pre class="source lang-java linenums">package com.hcl.booklendingsystem.controller;
+
+import java.util.List;
+import java.util.Optional;
+
+import javax.validation.Valid;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
+import com.hcl.booklendingsystem.dto.BookListResponse;
+import com.hcl.booklendingsystem.dto.BookRequestDetail;
+import com.hcl.booklendingsystem.dto.BookRequestDetails;
+import com.hcl.booklendingsystem.dto.BorrowRequest;
+import com.hcl.booklendingsystem.dto.CommonResponse;
+import com.hcl.booklendingsystem.dto.GetBooksOutput;
+import com.hcl.booklendingsystem.entity.BookRequest;
+import com.hcl.booklendingsystem.exception.BookIdAndUserIdEmptyException;
+import com.hcl.booklendingsystem.exception.UserException;
+import com.hcl.booklendingsystem.service.BookService;
+import com.hcl.booklendingsystem.util.BookLendingSystemConstants;
+
+import lombok.extern.slf4j.Slf4j;
+
+/**
+ * This class contains the method for add a book for registered user &amp; borrow a
+ * book if the book is available.
+ * 
+ * @author KiruthikaK
+ * @since 2019/16/10
+ *
+ */
+<span class="fc" id="L42">@Slf4j</span>
+@RestController
+@CrossOrigin(allowedHeaders = { &quot;*&quot;, &quot;*/&quot; }, origins = { &quot;*&quot;, &quot;*/&quot; })
+@RequestMapping(&quot;/books&quot;)
+<span class="fc" id="L46">public class BookController {</span>
+
+	@Autowired
+	BookService bookService;
+
+
+	/**
+	 * This method for add a book by the registered user with Not empty
+	 * bookRequestDetails fields.
+	 * @param bookRequestDetails
+	 * @return CommonResponse
+	 * 
+	 */
+	@PostMapping(&quot;/&quot;)
+	public ResponseEntity&lt;CommonResponse&gt; addBook(@Valid @RequestBody BookRequestDetails bookRequestDetails) {
+<span class="fc" id="L61">		log.info(BookLendingSystemConstants.BOOK_CONTROLLER_START);</span>
+<span class="fc" id="L62">		CommonResponse commonResponse = bookService.addBook(bookRequestDetails);</span>
+<span class="fc" id="L63">		commonResponse.setMessage(BookLendingSystemConstants.CREATED);</span>
+<span class="fc" id="L64">		commonResponse.setStatusCode(HttpStatus.CREATED.value());</span>
+<span class="fc" id="L65">		log.info(BookLendingSystemConstants.BOOK_CONTROLLER_END);</span>
+<span class="fc" id="L66">		return new ResponseEntity&lt;&gt;(commonResponse, HttpStatus.CREATED);</span>
+	}
+
+	/**
+	 * This method will accept bookId and userId and throw UserExcption in case if
+	 * either of them is null else call requestBook method in service layer and get
+	 * the saved BookRequest object.
+	 * 
+	 * @param bookId
+	 * @param userId
+	 * @return ResponseEntity of CommonResponse
+	 */
+	@PostMapping(&quot;/{bookId}/request&quot;)
+	public ResponseEntity&lt;CommonResponse&gt; bookRequest(@PathVariable(&quot;bookId&quot;) Integer bookId,
+			@RequestBody BookRequestDetail bookRequest) {
+<span class="fc" id="L81">		log.info(BookLendingSystemConstants.BOOK_REQUEST_DEBUG_START_CONTROLLER);</span>
+<span class="fc bfc" id="L82" title="All 4 branches covered.">		if (bookId == null || bookRequest.getUserId() == null) {</span>
+<span class="fc" id="L83">			throw new UserException(BookLendingSystemConstants.BOOK_ID_USER_ID_MANDATORY_EXCEPTION);</span>
+		}
+<span class="fc" id="L85">		CommonResponse commonResponse = new CommonResponse();</span>
+<span class="fc" id="L86">		Optional&lt;BookRequest&gt; bookRequestOptional = bookService.requestBook(bookId, bookRequest.getUserId());</span>
+<span class="pc bpc" id="L87" title="1 of 4 branches missed.">		if (bookRequestOptional.isPresent() &amp;&amp; bookRequestOptional.get().getBookRequestId() != null) {</span>
+<span class="fc" id="L88">			commonResponse.setMessage(BookLendingSystemConstants.REQUEST_SENT_SUCESS);</span>
+<span class="fc" id="L89">			commonResponse.setStatusCode(HttpStatus.OK.value());</span>
+		} else {
+<span class="fc" id="L91">			commonResponse.setMessage(BookLendingSystemConstants.FAILURE);</span>
+<span class="fc" id="L92">			commonResponse.setStatusCode(HttpStatus.INTERNAL_SERVER_ERROR.value());</span>
+		}
+<span class="fc" id="L94">		log.info(BookLendingSystemConstants.BOOK_REQUEST_DEBUG_END_CONTROLLER);</span>
+<span class="fc" id="L95">		return new ResponseEntity&lt;&gt;(commonResponse, HttpStatus.OK);</span>
+
+	}
+
+	/**
+	 * This method will accept bookName,authorName and pageNumber and throw
+	 * UserExcption in case if pageNumber is null else call searchBook method in
+	 * service layer and get filtered list of books .
+	 * 
+	 * @param bookName
+	 * @param authorName
+	 * @param pageNumber
+	 * @return ResponseEntity of BookListResponse
+	 */
+	@GetMapping(&quot;/&quot;)
+	public ResponseEntity&lt;BookListResponse&gt; getBooks(
+			@RequestParam(value = &quot;bookName&quot;, required = false) String bookName,
+			@RequestParam(value = &quot;authorName&quot;, required = false) String authorName,
+			@RequestParam(&quot;pageNumber&quot;) Integer pageNumber) {
+<span class="fc" id="L114">		log.info(BookLendingSystemConstants.BOOK_SEARCH_DEBUG_START_CONTROLLER);</span>
+<span class="fc" id="L115">		BookListResponse bookListResponse = new BookListResponse();</span>
+<span class="pc bpc" id="L116" title="1 of 4 branches missed.">		if (pageNumber == null || pageNumber &lt; 0) {</span>
+<span class="fc" id="L117">			throw new UserException(BookLendingSystemConstants.INVALID_INPUTS);</span>
+		}
+<span class="fc" id="L119">		Optional&lt;List&lt;GetBooksOutput&gt;&gt; bookListOptional = bookService.getBooks(bookName, authorName, pageNumber);</span>
+<span class="fc bfc" id="L120" title="All 2 branches covered.">		if (bookListOptional.isPresent()) {</span>
+<span class="fc" id="L121">			bookListResponse.setMessage(BookLendingSystemConstants.SUCCESS);</span>
+<span class="fc" id="L122">			bookListResponse.setStatusCode(HttpStatus.OK.value());</span>
+<span class="fc" id="L123">			bookListResponse.setBookList(bookListOptional.get());</span>
+		} else {
+<span class="fc" id="L125">			bookListResponse.setMessage(BookLendingSystemConstants.FAILURE);</span>
+<span class="fc" id="L126">			bookListResponse.setStatusCode(HttpStatus.INTERNAL_SERVER_ERROR.value());</span>
+		}
+<span class="fc" id="L128">		log.info(BookLendingSystemConstants.BOOK_SEARCH_DEBUG_END_CONTROLLER);</span>
+<span class="fc" id="L129">		return new ResponseEntity&lt;&gt;(bookListResponse, HttpStatus.OK);</span>
+	}
+
+	/**
+	 * This method for borrow a book by the registered user if the book is available
+	 * 
+	 * @param bookId
+	 * @param userId
+	 * @return CommonResponse
+	 */
+	@PostMapping(&quot;/{bookId}/borrow&quot;)
+	public ResponseEntity&lt;CommonResponse&gt; borrowBook(@PathVariable Integer bookId,
+			@RequestBody BorrowRequest borrowRequest) {
+<span class="fc" id="L142">		log.info(BookLendingSystemConstants.BOOK_CONTROLLER_START);</span>
+<span class="fc bfc" id="L143" title="All 2 branches covered.">		if (bookId == 0) {</span>
+<span class="fc" id="L144">			throw new BookIdAndUserIdEmptyException(BookLendingSystemConstants.BOOK_ID_EMPTY);</span>
+		}
+<span class="fc bfc" id="L146" title="All 2 branches covered.">		if (borrowRequest.getUserId() == 0) {</span>
+<span class="fc" id="L147">			throw new BookIdAndUserIdEmptyException(BookLendingSystemConstants.USER_ID_EMPTY);</span>
+		}
+<span class="fc" id="L149">		CommonResponse commonResponse = bookService.borrowBook(bookId, borrowRequest.getUserId());</span>
+<span class="fc" id="L150">		commonResponse.setMessage(BookLendingSystemConstants.UPDATED);</span>
+<span class="fc" id="L151">		commonResponse.setStatusCode(HttpStatus.OK.value());</span>
+<span class="fc" id="L152">		log.info(BookLendingSystemConstants.BOOK_CONTROLLER_END);</span>
+<span class="fc" id="L153">		return new ResponseEntity&lt;&gt;(commonResponse, HttpStatus.OK);</span>
+
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.0.201801022044</span></div></body></html>
